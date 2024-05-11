@@ -1,0 +1,23 @@
+name: Clean task
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 22 * * *'
+
+jobs:
+  clean:
+    runs-on: [self-hosted, 1ES.Pool=oneesrunnerscleaner]
+    steps:
+      - name: checkout
+        uses: actions/checkout@44c2b7a8a4ea60a981eaca3cf939b5f4305c123b # v4.1.5
+      - name: setup go
+        uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
+        with:
+          go-version: '^1.22'
+      - name: clean
+        run: |
+          az login --identity --username $MSI_ID > /dev/null
+          export ARM_SUBSCRIPTION_ID=$(az login --identity --username $MSI_ID | jq -r '.[0] | .id')
+          export ARM_TENANT_ID=$(az login --identity --username $MSI_ID | jq -r '.[0] | .tenantId')
+          go mod tidy
+          go run main.go

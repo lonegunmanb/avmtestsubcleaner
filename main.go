@@ -4,10 +4,13 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"regexp"
 	"time"
 
 	"github.com/lonegunmanb/oneesrunnerscleaner/pkg"
 )
+
+var runnerNameRegex = regexp.MustCompile("[a-z0-9_]{15}")
 
 func main() {
 	subscriptionId := readEssentialEnv("AZURE_SUBSCRIPTION_ID")
@@ -45,8 +48,11 @@ func main() {
 				runnerNames = append(runnerNames, r.Name)
 			}
 		}
-		tags := map[string]any{
-			"repo_url": pool.Tags["repo_url"],
+		tags := make(map[string]any)
+		for key, value := range pool.Tags {
+			if !runnerNameRegex.Match([]byte(key)) {
+				tags[key] = value
+			}
 		}
 		for _, n := range runnerNames {
 			tags[n] = time.Now().Unix()
