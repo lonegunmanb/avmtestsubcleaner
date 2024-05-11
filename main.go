@@ -55,7 +55,7 @@ func main() {
 			}
 		}
 		for _, n := range runnerNames {
-			tags[n] = time.Now().Unix()
+			tags[n] = time.Now().UTC().String()
 		}
 		fmt.Printf("upgrade tags for %s/%s\n", pool.ResourceGroup, pool.Name)
 		_ = client.UpgradePoolTags(pool, tags)
