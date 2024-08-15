@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"strconv"
+	"sync"
 	"time"
 
 	"github.com/lonegunmanb/oneesrunnerscleaner/pkg"
@@ -20,6 +22,52 @@ func main() {
 	if err != nil {
 		panic(err.Error())
 	}
+	purgeRunnerPools(err, client)
+	purgeResidualResourceGroups(client)
+}
+
+func purgeResidualResourceGroups(client *pkg.Client) {
+	recordRg, err := client.EnsureResidualCleanerResourceGroup()
+	if err != nil {
+		panic(err.Error())
+	}
+	groups, err := client.ListAllResourceGroups()
+	if err != nil {
+		panic(err.Error())
+	}
+	wg := sync.WaitGroup{}
+
+	for _, rg := range groups {
+		if rg.IsProtected() {
+			continue
+		}
+		if _, ok := recordRg.Tags[rg.Name]; ok {
+			wg.Add(1)
+			go func() {
+				fmt.Printf("deleting resource group %s\n", rg.Name)
+				defer wg.Done()
+				err = client.DeleteResourceGroup(rg.Name)
+				if err != nil {
+					fmt.Printf("cannot delete resource group %s: %+v\n", rg.Name, err)
+				} else {
+					fmt.Printf("resource group %s deleted\n", rg.Name)
+				}
+			}()
+			delete(recordRg.Tags, rg.Name)
+			continue
+		}
+		if len(recordRg.Tags) <= 50 {
+			recordRg.Tags[rg.Name] = strconv.FormatInt(time.Now().Unix(), 10)
+		}
+	}
+	err = client.UpgradeResidualResourceGroupTags(recordRg)
+	if err != nil {
+		panic(err.Error())
+	}
+	wg.Wait()
+}
+
+func purgeRunnerPools(err error, client *pkg.Client) {
 	pools, err := client.ListPools()
 	if err != nil {
 		panic(fmt.Sprintf("cannot list pools: %+v", err))
