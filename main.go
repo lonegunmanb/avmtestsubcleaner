@@ -56,7 +56,7 @@ func purgeResidualResourceGroups(client *pkg.Client) {
 			delete(recordRg.Tags, rg.Name)
 			continue
 		}
-		if len(recordRg.Tags) <= 50 {
+		if len(recordRg.Tags) < 50 {
 			recordRg.Tags[rg.Name] = strconv.FormatInt(time.Now().Unix(), 10)
 		}
 	}
