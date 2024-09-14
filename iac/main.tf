@@ -1,3 +1,26 @@
+terraform {
+  required_version = ">= 1.2"
+
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = ">= 3.11, < 4.0"
+    }
+    random = {
+      source  = "hashicorp/random"
+      version = ">= 3.0.0"
+    }
+  }
+}
+
+provider "azurerm" {
+  features {
+    resource_group {
+      prevent_deletion_if_contains_resources = false
+    }
+  }
+}
+
 resource azurerm_resource_group example {
   name = "residual_resource_group_cleaner"
   location = "westeurope"
@@ -70,6 +93,10 @@ resource "azurerm_container_app_job" "example" {
       env {
         name = "ARM_CLIENT_ID"
         secret_name = "azure-client-id"
+      }
+      env {
+        name = "MSI_ID"
+        value = azurerm_user_assigned_identity.identity.principal_id
       }
       env {
         name = "ARM_USE_MSI"
