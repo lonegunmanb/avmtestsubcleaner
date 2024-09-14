@@ -28,6 +28,7 @@ var protectedNameHashes = map[string]struct{}{
 	"f054bc18556dfd9d4cd5c6f92a3b96db": {},
 	"e35386fdf3abd880dd3b57c7bcb2340f": {},
 	"62e5e9c30b987e3d11dbeb7a1b07ff70": {},
+	"6e0030125d834f2263ff441f6b8d3ff7": {},
 }
 
 func (rg ResourceGroup) IsProtected() bool {
